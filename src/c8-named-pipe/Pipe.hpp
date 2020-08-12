@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace NamedPipe {
+namespace C8::NamedPipe {
   struct Pipe {
     explicit Pipe(std::string_view name);
     Pipe(const Pipe&) = delete;
@@ -23,4 +23,4 @@ namespace NamedPipe {
 
     std::string name_;
   };
-} // namespace NamedPipe
+} // namespace C8::NamedPipe

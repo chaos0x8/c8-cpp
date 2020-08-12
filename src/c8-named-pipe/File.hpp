@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace NamedPipe {
+namespace C8::NamedPipe {
   struct File {
     File(std::string_view name, int mode);
     ~File();
@@ -16,4 +16,4 @@ namespace NamedPipe {
 
     std::unique_ptr<Resource> resource_;
   };
-} // namespace NamedPipe
+} // namespace C8::NamedPipe

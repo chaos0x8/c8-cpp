@@ -1,4 +1,4 @@
-namespace('c8-named-pipe') {
+namespace('c8-option-parser') {
   flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG']
 
   if ENV.has_key?('debug')
@@ -7,24 +7,24 @@ namespace('c8-named-pipe') {
   end
 
   library = Library.new { |t|
-    t.name = 'lib/libc8-named-pipe.a'
-    t.sources << FileList['src/c8-named-pipe/**/*.cpp']
-    t.includes << ['src/c8-named-pipe']
+    t.name = 'lib/libc8-option-parser.a'
+    t.sources << FileList['src/c8-option-parser/**/*.cpp']
+    t.includes << ['src/c8-option-parser']
     t.flags << flags
   }
 
   ut = Executable.new { |t|
-    t.name = 'bin/c8-named-pipe-ut'
-    t.sources << FileList['test/c8-named-pipe/**/*.cpp']
-    t.includes << ['src/c8-named-pipe', 'test/c8-named-pipe']
+    t.name = 'bin/c8-option-parser-ut'
+    t.sources << FileList['test/c8-option-parser/**/*.cpp']
+    t.includes << ['src/c8-option-parser', 'test/c8-option-parser']
     t.libs << ['-pthread', '-lgtest', '-lgmock', library]
     t.flags << flags
   }
 
-  desc 'Builds c8-named-pipe'
+  desc 'Builds c8-option-parser'
   C8.multitask(default: Names['generated:default', library])
 
-  desc 'Runs c8-named-pipe tests'
+  desc 'Runs c8-option-parser tests'
   C8.multitask(test: Names['generated:default', library, ut]) {
     sh ut.name
   }

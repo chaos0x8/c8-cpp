@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-namespace NamedPipe {
+namespace C8::NamedPipe {
   using namespace std::string_literals;
 
   Pipe::Pipe(std::string_view name) : name_(name) {
@@ -42,4 +42,4 @@ namespace NamedPipe {
     }
     name_ = std::string();
   }
-} // namespace NamedPipe
+} // namespace C8::NamedPipe

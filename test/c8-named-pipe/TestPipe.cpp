@@ -4,13 +4,20 @@
 #include <gmock/gmock.h>
 #include <thread>
 
-namespace NamedPipe {
+namespace C8::NamedPipe {
   using namespace testing;
   using namespace std::string_literals;
 
   struct TestPipe : public Test {
+    void TearDown() override {
+      if (t.joinable()) {
+        t.join();
+      }
+    }
+
     std::string name = tmpnam(nullptr);
     Pipe sut{name};
+    std::thread t;
   };
 
   TEST_F(TestPipe, shouldRaiseWhenCannotCreate) {
@@ -18,16 +25,14 @@ namespace NamedPipe {
   }
 
   TEST_F(TestPipe, shouldWriteLine) {
-    auto t = std::thread([this] {
+    t = std::thread([this] {
       File file = sut.openForWrite();
-      file.write("Hello");
-      file.write("World");
+      EXPECT_NO_THROW(file.write("Hello"));
+      EXPECT_NO_THROW(file.write("World"));
     });
 
     File file = sut.openForRead();
     ASSERT_THAT(file.read(), Eq("Hello"));
     ASSERT_THAT(file.read(), Eq("World"));
-
-    t.join();
   }
-} // namespace NamedPipe
+} // namespace C8::NamedPipe

@@ -52,8 +52,6 @@ tags
 *.blend?
 
 # Generated files
-Source/Generated/*
-Source/Common/Exceptions.hpp
 Source/*.hpp
 
 ##
