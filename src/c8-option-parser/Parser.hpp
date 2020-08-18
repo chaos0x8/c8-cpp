@@ -33,23 +33,23 @@ namespace C8::OptionParser {
       return args_[index];
     }
 
-    template <class T> Option<T> on(std::string_view name) {
-      auto option = std::make_shared<Detail::TypedOption<T>>(name);
+    template <class T>
+    Option<T> on(std::string_view name, std::string_view description) {
+      auto option = std::make_shared<Detail::TypedOption<T>>(name, description);
       options_.emplace_back(option);
       return Option<T>(std::move(option));
     }
 
-    template <size_t N = 0, class F> void on(std::string_view name, F&& fun) {
-      auto option =
-        std::make_shared<Detail::LambdaOption<N, F>>(name, std::move(fun));
-      options_.emplace_back(option);
-      lambdaOptions_.emplace_back(std::move(option));
+    template <size_t N = 0, class F>
+    void on(std::string_view name, std::string_view description, F&& fun) {
+      auto option = std::make_shared<Detail::LambdaOption<N, F>>(
+        name, description, std::move(fun));
+      options_.emplace_back(std::move(option));
     }
 
   private:
     value_type name_;
     std::vector<value_type> args_;
-    std::vector<std::weak_ptr<Detail::Option>> options_;
-    std::vector<std::shared_ptr<Detail::Option>> lambdaOptions_;
+    std::vector<std::shared_ptr<Detail::Option>> options_;
   };
 } // namespace C8::OptionParser

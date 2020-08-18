@@ -34,7 +34,8 @@ namespace C8::OptionParser {
     };
 
     struct Option {
-      explicit Option(std::string_view name) : name_(name) {}
+      explicit Option(std::string_view name, std::string_view desc)
+        : name_(name), desc_(desc) {}
 
       virtual ~Option() = default;
 
@@ -42,15 +43,21 @@ namespace C8::OptionParser {
         return name_;
       }
 
+      std::string_view description() const {
+        return desc_;
+      }
+
       virtual void set(std::string_view val) = 0;
       virtual size_t arity() const = 0;
 
     private:
       std::string name_;
+      std::string desc_;
     };
 
     template <class T> struct TypedOption : public Option {
-      explicit TypedOption(std::string_view name) : Option(name) {}
+      explicit TypedOption(std::string_view name, std::string_view desc)
+        : Option(name, desc) {}
 
       explicit operator bool() const {
         return static_cast<bool>(value_);
@@ -73,8 +80,8 @@ namespace C8::OptionParser {
     };
 
     template <size_t N, class F> struct LambdaOption : public Option {
-      LambdaOption(std::string_view name, F&& fun)
-        : Option(name), fun_(std::move(fun)) {}
+      LambdaOption(std::string_view name, std::string_view desc, F&& fun)
+        : Option(name, desc), fun_(std::move(fun)) {}
 
       void set(std::string_view val) override {
         if constexpr (N == 0) {

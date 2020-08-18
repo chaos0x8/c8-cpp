@@ -21,7 +21,7 @@ namespace C8::OptionParser {
   };
 
   TEST_F(ParserTestSuite, accessBooleanParameterNotPresent) {
-    auto help = sut.on<bool>("--help");
+    auto help = sut.on<bool>("--help", "displays help");
 
     sut.parse({});
 
@@ -31,7 +31,7 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessBooleanParameterPresent) {
-    auto help = sut.on<bool>("--help");
+    auto help = sut.on<bool>("--help", "displays help");
 
     sut.parse({"--help"});
 
@@ -42,7 +42,7 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessStringParameterNotPresent) {
-    auto name = sut.on<std::string>("--name");
+    auto name = sut.on<std::string>("--name", "sets name");
 
     sut.parse({});
 
@@ -51,7 +51,7 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessStringParameterPresent) {
-    auto name = sut.on<std::string>("--name");
+    auto name = sut.on<std::string>("--name", "sets name");
 
     sut.parse({"--name", "Lara"});
 
@@ -62,8 +62,8 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessUnsignedParameterPresent) {
-    auto age = sut.on<uint8_t>("--age");
-    auto height = sut.on<uint32_t>("--height");
+    auto age = sut.on<uint8_t>("--age", "sets age");
+    auto height = sut.on<uint32_t>("--height", "sets height");
 
     sut.parse({"--age", "42", "--height", "128"});
 
@@ -73,8 +73,8 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessSignedParameterPresent) {
-    auto temp = sut.on<int8_t>("--temperature");
-    auto money = sut.on<int32_t>("--money");
+    auto temp = sut.on<int8_t>("--temperature", "sets temperature");
+    auto money = sut.on<int32_t>("--money", "sets money");
 
     sut.parse({"--temperature", "-10", "--money", "-42"});
 
@@ -84,8 +84,8 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessFloatingPointParameterPresent) {
-    auto temp = sut.on<float>("--temperature");
-    auto money = sut.on<double>("--money");
+    auto temp = sut.on<float>("--temperature", "sets temperature");
+    auto money = sut.on<double>("--money", "sets money");
 
     sut.parse({"--temperature", "-10.7", "--money", "42.8"});
 
@@ -95,7 +95,7 @@ namespace C8::OptionParser {
   }
 
   TEST_F(ParserTestSuite, accessCustomClassParameterPresent) {
-    auto foo = sut.on<Foo>("--foo");
+    auto foo = sut.on<Foo>("--foo", "sets foo");
 
     sut.parse({"--foo", "142"});
 
@@ -107,7 +107,7 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterPresentWithoutArg) {
     bool help = false;
 
-    sut.on<0>("--help", [&help] { help = true; });
+    sut.on<0>("--help", "displays help", [&help] { help = true; });
     sut.parse({"--help"});
 
     ASSERT_THAT(help, Eq(true));
@@ -116,7 +116,7 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterNotPresentWithoutArg) {
     bool help = false;
 
-    sut.on<0>("--help", [&help] { help = true; });
+    sut.on<0>("--help", "displays help", [&help] { help = true; });
     sut.parse({});
 
     ASSERT_THAT(help, Eq(false));
@@ -125,7 +125,8 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterPresentWithArg) {
     std::string help;
 
-    sut.on<1>("--help", [&help](std::string_view arg) { help = arg; });
+    sut.on<1>(
+      "--help", "displays help", [&help](std::string_view arg) { help = arg; });
     sut.parse({"--help", "me"});
 
     ASSERT_THAT(help, Eq("me"));
@@ -134,7 +135,8 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterNotPresentWithArg) {
     std::string help;
 
-    sut.on<1>("--help", [&help](std::string_view arg) { help = arg; });
+    sut.on<1>(
+      "--help", "displays help", [&help](std::string_view arg) { help = arg; });
     sut.parse({});
 
     ASSERT_THAT(help, Eq(""));
@@ -161,16 +163,16 @@ namespace C8::OptionParser {
   struct ParserHelpTestSuite : public ParserTestSuite {
     std::array<const char*, 1> args = {"appName"};
 
-    Option<std::string> name = sut.on<std::string>("--name");
-    Option<bool> help = sut.on<bool>("--help");
+    Option<std::string> name = sut.on<std::string>("--name", "sets name");
+    Option<bool> help = sut.on<bool>("--help", "displays help");
   };
 
   TEST_F(ParserHelpTestSuite, returnsHelpText) {
     std::string e;
     e += "Usage: [options] args...\n";
     e += "\n";
-    e += "--name\n";
-    e += "--help\n";
+    e += "--name V - sets name\n";
+    e += "--help - displays help\n";
 
     EXPECT_THAT(sut.help(), Eq(e));
   }
@@ -181,8 +183,8 @@ namespace C8::OptionParser {
     std::string e;
     e += "Usage: appName [options] args...\n";
     e += "\n";
-    e += "--name\n";
-    e += "--help\n";
+    e += "--name V - sets name\n";
+    e += "--help - displays help\n";
 
     EXPECT_THAT(sut.help(), Eq(e));
   }

@@ -28,17 +28,11 @@ namespace C8::OptionParser {
     size_t arity = 0u;
 
     for (auto& arg : args) {
-      auto kt = std::find_if(
-        std::begin(options_), std::end(options_), [&arg](auto weakOpt) {
-          if (auto o = weakOpt.lock()) {
-            return o->name() == arg;
-          }
-
-          return false;
-        });
+      auto kt = std::find_if(std::begin(options_), std::end(options_),
+        [&arg](const auto& o) { return o->name() == arg; });
 
       if (kt != std::end(options_)) {
-        opt = kt->lock();
+        opt = *kt;
         arity = opt->arity();
 
         if (arity == 0u) {
@@ -71,9 +65,11 @@ namespace C8::OptionParser {
     }
     ss << "\n";
 
-    for (const auto& o : options_) {
-      if (auto opt = o.lock()) {
-        ss << opt->name() << "\n";
+    for (const auto& opt : options_) {
+      if (opt->arity() == 0) {
+        ss << opt->name() << " - " << opt->description() << "\n";
+      } else {
+        ss << opt->name() << " V - " << opt->description() << "\n";
       }
     }
 
