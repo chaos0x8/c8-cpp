@@ -1,10 +1,12 @@
 #include "Parser.hpp"
+#include "Error.hpp"
 #include <algorithm>
+#include <regex>
 #include <sstream>
 
 namespace C8::OptionParser {
   namespace Detail {
-    std::vector<std::string> toVec(int argc, const char** argv) {
+    template <class T> std::vector<std::string> toVec(int argc, T** argv) {
       std::vector<std::string> args;
 
       for (int i = 1; i < argc; ++i) {
@@ -14,6 +16,14 @@ namespace C8::OptionParser {
       return args;
     }
   } // namespace Detail
+
+  void Parser::parse(int argc, char** argv) {
+    parse(Detail::toVec(argc, argv));
+
+    if (argc >= 1) {
+      name_ = argv[0];
+    }
+  }
 
   void Parser::parse(int argc, const char** argv) {
     parse(Detail::toVec(argc, argv));
@@ -25,28 +35,35 @@ namespace C8::OptionParser {
 
   void Parser::parse(std::vector<std::string> args) {
     std::shared_ptr<Detail::Option> opt;
-    size_t arity = 0u;
+    bool verifyUnknownArguments = true;
 
     for (auto& arg : args) {
-      auto kt = std::find_if(std::begin(options_), std::end(options_),
-        [&arg](const auto& o) { return o->name() == arg; });
-
-      if (kt != std::end(options_)) {
-        opt = *kt;
-        arity = opt->arity();
-
-        if (arity == 0u) {
-          opt->set("");
-          opt = nullptr;
-        }
+      if (arg == "--") {
+        verifyUnknownArguments = false;
       } else {
-        if (opt) {
-          opt->set(arg);
-          if (--arity == 0u) {
+        auto kt = std::find_if(std::begin(options_), std::end(options_),
+          [&arg](const auto& o) { return o->name() == arg; });
+
+        if (kt != std::end(options_)) {
+          opt = *kt;
+
+          if (opt->arity() == 0u) {
+            opt->set("");
             opt = nullptr;
           }
         } else {
-          args_.emplace_back(std::move(arg));
+          if (opt) {
+            opt->set(arg);
+            if (opt->arity() == 1u) {
+              opt = nullptr;
+            }
+          } else {
+            if (verifyUnknownArguments and isOptionNameValid(arg)) {
+              throw UnknownOptionError(arg);
+            }
+
+            args_.emplace_back(std::move(arg));
+          }
         }
       }
     }
@@ -58,10 +75,14 @@ namespace C8::OptionParser {
 
   std::string Parser::help() const {
     std::stringstream ss;
-    if (name_.size() > 0) {
-      ss << "Usage: " << name_ << " [options] args...\n";
+    if (banner_.size() > 0) {
+      ss << banner_ << "\n";
     } else {
-      ss << "Usage: [options] args...\n";
+      if (name_.size() > 0) {
+        ss << "Usage: " << name_ << " [options] args...\n";
+      } else {
+        ss << "Usage: [options] args...\n";
+      }
     }
     ss << "\n";
 
@@ -74,5 +95,33 @@ namespace C8::OptionParser {
     }
 
     return ss.str();
+  }
+
+  void Parser::banner(std::string_view value) {
+    banner_ = value;
+  }
+
+  std::string_view Parser::banner() const {
+    return banner_;
+  }
+
+  bool Parser::isOptionNameValid(std::string_view name) const {
+    std::cmatch m;
+
+    if (std::regex_match(name.data(), m, std::regex("^-\\w+"))) {
+      return true;
+    }
+
+    if (std::regex_match(name.data(), m, std::regex("^--\\w+"))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  void Parser::verifyOptionName(std::string_view name) const {
+    if (not isOptionNameValid(name)) {
+      throw InvalidOptionNameError(name);
+    }
   }
 } // namespace C8::OptionParser

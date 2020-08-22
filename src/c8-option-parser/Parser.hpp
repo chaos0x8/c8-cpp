@@ -1,55 +1,55 @@
 #pragma once
 
+#include "Args.hpp"
 #include "Option.hpp"
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace C8::OptionParser {
   struct Parser {
-    using size_type = size_t;
-    using value_type = std::string;
-    using iterator = std::vector<value_type>::const_iterator;
-    using const_iterator = std::vector<value_type>::const_iterator;
+    Parser() = default;
+    Parser(const Parser&) = delete;
+    Parser& operator=(const Parser&) = delete;
 
+    void parse(int argc, char** argv);
     void parse(int argc, const char** argv);
     void parse(std::vector<std::string> args);
     std::string_view name() const;
     std::string help() const;
+    void banner(std::string_view);
+    std::string_view banner() const;
 
-    size_t size() const {
-      return args_.size();
-    }
-
-    iterator begin() const {
-      return std::cbegin(args_);
-    }
-
-    iterator end() const {
-      return std::cend(args_);
-    }
-
-    std::string_view operator[](size_t index) const {
-      return args_[index];
+    Args args() const {
+      return Args(args_);
     }
 
     template <class T>
     Option<T> on(std::string_view name, std::string_view description) {
+      verifyOptionName(name);
+
       auto option = std::make_shared<Detail::TypedOption<T>>(name, description);
       options_.emplace_back(option);
       return Option<T>(std::move(option));
     }
 
-    template <size_t N = 0, class F>
+    template <size_t Arity = 0, class F>
     void on(std::string_view name, std::string_view description, F&& fun) {
-      auto option = std::make_shared<Detail::LambdaOption<N, F>>(
+      verifyOptionName(name);
+
+      auto option = std::make_shared<Detail::LambdaOption<Arity, F>>(
         name, description, std::move(fun));
       options_.emplace_back(std::move(option));
     }
 
   private:
-    value_type name_;
-    std::vector<value_type> args_;
+    bool isOptionNameValid(std::string_view) const;
+    void verifyOptionName(std::string_view) const;
+
+    std::string name_;
+    std::string banner_;
+    std::deque<std::string> args_;
     std::vector<std::shared_ptr<Detail::Option>> options_;
   };
 } // namespace C8::OptionParser
