@@ -1,5 +1,5 @@
-#include "Error.hpp"
-#include "Parser.hpp"
+#include "c8-option-parser/Error.hpp"
+#include "c8-option-parser/Parser.hpp"
 #include <gmock/gmock.h>
 
 struct Foo {

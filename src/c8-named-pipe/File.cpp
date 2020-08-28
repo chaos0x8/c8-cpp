@@ -1,5 +1,5 @@
 #include "File.hpp"
-#include "Error.hpp"
+#include "c8-common/errors/SystemError.hpp"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -21,19 +21,22 @@ namespace C8::NamedPipe {
 
     std::string read() {
       uint32_t size = 0u;
-      Error::test(::read(fd_, &size, sizeof(size)) == sizeof(size));
+      Common::Errors::SystemError::test(
+        ::read(fd_, &size, sizeof(size)) == sizeof(size));
 
       std::string result(size, 0);
-      Error::test(::read(fd_, result.data(), result.size()) ==
-                  static_cast<ssize_t>(size));
+      Common::Errors::SystemError::test(
+        ::read(fd_, result.data(), result.size()) ==
+        static_cast<ssize_t>(size));
 
       return result;
     }
 
     void write(std::string_view txt) {
       uint32_t size = txt.size();
-      Error::test(::write(fd_, &size, sizeof(size)) == sizeof(size));
-      Error::test(
+      Common::Errors::SystemError::test(
+        ::write(fd_, &size, sizeof(size)) == sizeof(size));
+      Common::Errors::SystemError::test(
         ::write(fd_, txt.data(), txt.size()) == static_cast<ssize_t>(size));
     }
 

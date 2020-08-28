@@ -8,16 +8,18 @@ namespace('c8-named-pipe') {
 
   library = Library.new { |t|
     t.name = 'lib/libc8-named-pipe.a'
+    t.requirements << 'c8-common:default'
     t.sources << FileList['src/c8-named-pipe/**/*.cpp']
-    t.includes << ['src/c8-named-pipe']
+    t.includes << ['src']
     t.flags << flags
   }
 
   ut = Executable.new { |t|
     t.name = 'bin/c8-named-pipe-ut'
+    t.requirements << 'c8-common:default'
     t.sources << FileList['test/c8-named-pipe/**/*.cpp']
-    t.includes << ['src/c8-named-pipe', 'test/c8-named-pipe']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
+    t.includes << ['src', 'test']
+    t.libs << ['-pthread', '-lgtest', '-lgmock', library, 'lib/libc8-common.a']
     t.flags << flags
   }
 

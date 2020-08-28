@@ -1,5 +1,5 @@
-#include "Error.hpp"
-#include "Pipe.hpp"
+#include "c8-common/errors/SystemError.hpp"
+#include "c8-named-pipe/Pipe.hpp"
 #include <fstream>
 #include <gmock/gmock.h>
 #include <thread>
@@ -21,7 +21,7 @@ namespace C8::NamedPipe {
   };
 
   TEST_F(TestPipe, shouldRaiseWhenCannotCreate) {
-    ASSERT_THROW(Pipe("/tmp/"s + name), Error);
+    ASSERT_THROW(Pipe("/tmp/"s + name), Common::Errors::SystemError);
   }
 
   TEST_F(TestPipe, shouldWriteLine) {

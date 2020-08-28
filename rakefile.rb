@@ -13,7 +13,7 @@ desc 'Run all tests'
 task(test: namespaces.collect { |x| "#{x}:test" })
 
 desc 'Generates template for new library'
-task(:new, [:name]) { |a,args|
+task(:new, [:name]) { |t, args|
   name = args[:name]
 
   unless File.exist?("rakelib/c8-#{name}.rake")
@@ -29,14 +29,14 @@ task(:new, [:name]) { |a,args|
     d << "  library = Library.new { |t|"
     d << "    t.name = 'lib/libc8-#{name}.a'"
     d << "    t.sources << FileList['src/c8-#{name}/**/*.cpp']"
-    d << "    t.includes << ['src/c8-#{name}']"
+    d << "    t.includes << ['src']"
     d << "    t.flags << flags"
     d << "  }"
     d << ""
     d << "  ut = Executable.new { |t|"
     d << "    t.name = 'bin/c8-#{name}-ut'"
     d << "    t.sources << FileList['test/c8-#{name}/**/*.cpp']"
-    d << "    t.includes << ['src/c8-#{name}', 'test/c8-#{name}']"
+    d << "    t.includes << ['src', 'test']"
     d << "    t.libs << ['-pthread', '-lgtest', '-lgmock', library]"
     d << "    t.flags << flags"
     d << "  }"

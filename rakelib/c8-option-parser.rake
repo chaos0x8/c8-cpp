@@ -9,14 +9,14 @@ namespace('c8-option-parser') {
   library = Library.new { |t|
     t.name = 'lib/libc8-option-parser.a'
     t.sources << FileList['src/c8-option-parser/**/*.cpp']
-    t.includes << ['src/c8-option-parser']
+    t.includes << ['src']
     t.flags << flags
   }
 
   ut = Executable.new { |t|
     t.name = 'bin/c8-option-parser-ut'
     t.sources << FileList['test/c8-option-parser/**/*.cpp']
-    t.includes << ['src/c8-option-parser', 'test/c8-option-parser']
+    t.includes << ['src', 'test']
     t.libs << ['-pthread', '-lgtest', '-lgmock', library]
     t.flags << flags
   }

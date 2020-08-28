@@ -1,5 +1,5 @@
 #include "Pipe.hpp"
-#include "Error.hpp"
+#include "c8-common/errors/SystemError.hpp"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -10,7 +10,7 @@ namespace C8::NamedPipe {
 
   Pipe::Pipe(std::string_view name) : name_(name) {
     if (mkfifo(name_.c_str(), 0666) != 0) {
-      throw Error(errno);
+      throw Common::Errors::SystemError(errno);
     }
   }
 
