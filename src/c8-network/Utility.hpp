@@ -11,4 +11,5 @@ namespace C8::Network {
   };
 
   std::vector<IpAddress> getIpAddresses();
+  std::vector<std::string> getIpv4Addresses();
 } // namespace C8::Network

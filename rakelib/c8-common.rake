@@ -1,14 +1,17 @@
-def c8_common_errors_new key, c
+def c8_common_errors_new key, c, lib:
+  libNamespace = lib.gsub(/^c8-/, '').split('-').collect(&:capitalize).join
+  namespace = ['C8', libNamespace, 'Errors'].join('::')
+
   header = GeneratedFile.new(format: true) { |t|
-    t.name = File.join('src/c8-common/errors', "#{key}.hpp")
+    t.name = File.join("src/#{lib}/errors", "#{key}.hpp")
     t.code = proc {
       d = []
       d << "#pragma once"
       d << ""
-      d << "#include \"errors/Error.hpp\""
+      d << "#include \"c8-common/errors/Error.hpp\""
       d << ""
-      d << "namespace C8::Common::Errors {"
-      d << "  struct #{key} : public Error {"
+      d << "namespace #{namespace} {"
+      d << "  struct #{key} : public C8::Common::Errors::Error {"
       d << "    explicit #{key}();"
       d << "  };"
       d << "}"
@@ -16,26 +19,26 @@ def c8_common_errors_new key, c
   }
 
   source = GeneratedFile.new(format: true) { |t|
-    t.name = File.join('src/c8-common/errors', "#{key}.cpp")
+    t.name = File.join("src/#{lib}/errors", "#{key}.cpp")
     t.code = proc {
       d = []
-      d << "#include \"#{key}.hpp\""
-      d << "#include \"Format.hpp\""
+      d << "#include \"#{lib}/errors/#{key}.hpp\""
+      d << "#include \"c8-common/Format.hpp\""
       d << ""
-      d << "namespace C8::Common::Errors {"
-      d << "  #{key}::#{key}() : Error(#{c['string']}) {}"
+      d << "namespace #{namespace} {"
+      d << "  #{key}::#{key}() : C8::Common::Errors::Error(#{c['string']}) {}"
       d << "}"
     }
   }
 
   test = GeneratedFile.new(format: true) { |t|
-    t.name = File.join('test/c8-common/errors', "Test#{key}.cpp")
+    t.name = File.join("test/#{lib}/errors", "Test#{key}.cpp")
     t.code = proc {
       d = []
-      d << "#include \"errors/#{key}.hpp\""
+      d << "#include \"#{lib}/errors/#{key}.hpp\""
       d << "#include <gmock/gmock.h>"
       d << ""
-      d << "namespace C8::Common::Errors {"
+      d << "namespace #{namespace} {"
       d << "using namespace testing;"
       d << "using namespace std::string_literals;"
       d << ""
@@ -61,7 +64,10 @@ namespace('c8-common') {
     flags += ['-g']
   end
 
-  generated = ['src/c8-common/errors.hpp'].collect { |fn|
+  generated = [
+    'src/c8-common/errors.hpp',
+    'src/c8-common/type_traits.hpp'
+  ].collect { |fn|
     if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
       Generate.includeDirectory(dir)
     end
@@ -92,11 +98,12 @@ namespace('c8-common') {
     sh ut.name
   }
 
-  desc 'Generates new error'
-  C8.task(:error, [:name]) { |t, args|
+  desc 'Generates new error in given library (default lib: c8-common)'
+  C8.task(:error, [:name, :lib]) { |t, args|
     name = args[:name]
+    lib = args[:lib] || 'c8-common'
 
-    gen = c8_common_errors_new(name, {'string' => "\"#{name}\""})
+    gen = c8_common_errors_new(name, {'string' => "\"#{name}\""}, lib: lib)
 
     task('error_exec' => Names[gen])
 
