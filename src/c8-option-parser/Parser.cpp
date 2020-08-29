@@ -1,12 +1,13 @@
 #include "Parser.hpp"
-#include "Error.hpp"
+#include "errors.hpp"
 #include <algorithm>
 #include <regex>
 #include <sstream>
 
 namespace C8::OptionParser {
   namespace Detail {
-    template <class T> std::vector<std::string> toVec(int argc, T** argv) {
+    template <class T>
+    std::vector<std::string> toVec(int argc, T** argv) {
       std::vector<std::string> args;
 
       for (int i = 1; i < argc; ++i) {
@@ -41,8 +42,8 @@ namespace C8::OptionParser {
       if (arg == "--") {
         verifyUnknownArguments = false;
       } else {
-        auto kt = std::find_if(std::begin(options_), std::end(options_),
-          [&arg](const auto& o) { return o->name() == arg; });
+        auto kt =
+          std::find_if(std::begin(options_), std::end(options_), [&arg](const auto& o) { return o->name() == arg; });
 
         if (kt != std::end(options_)) {
           opt = *kt;
@@ -59,7 +60,7 @@ namespace C8::OptionParser {
             }
           } else {
             if (verifyUnknownArguments and isOptionNameValid(arg)) {
-              throw UnknownOptionError(arg);
+              throw Errors::UnknownOptionError(arg);
             }
 
             args_.emplace_back(std::move(arg));
@@ -121,7 +122,7 @@ namespace C8::OptionParser {
 
   void Parser::verifyOptionName(std::string_view name) const {
     if (not isOptionNameValid(name)) {
-      throw InvalidOptionNameError(name);
+      throw Errors::InvalidOptionNameError(name);
     }
   }
 } // namespace C8::OptionParser

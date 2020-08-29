@@ -6,8 +6,17 @@ namespace('c8-option-parser') {
     flags += ['-g']
   end
 
+  generated = [
+    'src/c8-option-parser/errors.hpp',
+  ].collect { |fn|
+    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
+      Generate.includeDirectory(dir)
+    end
+  }
+
   library = Library.new { |t|
     t.name = 'lib/libc8-option-parser.a'
+    t.requirements << generated
     t.sources << FileList['src/c8-option-parser/**/*.cpp']
     t.includes << ['src']
     t.flags << flags
@@ -15,6 +24,7 @@ namespace('c8-option-parser') {
 
   ut = Executable.new { |t|
     t.name = 'bin/c8-option-parser-ut'
+    t.requirements << generated
     t.sources << FileList['test/c8-option-parser/**/*.cpp']
     t.includes << ['src', 'test']
     t.libs << ['-pthread', '-lgtest', '-lgmock', library]

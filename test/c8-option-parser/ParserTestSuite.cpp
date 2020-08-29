@@ -1,5 +1,5 @@
-#include "c8-option-parser/Error.hpp"
 #include "c8-option-parser/Parser.hpp"
+#include "c8-option-parser/errors.hpp"
 #include <gmock/gmock.h>
 
 struct Foo {
@@ -126,8 +126,7 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterPresentWithArg) {
     std::string help;
 
-    sut.on<1>(
-      "--help", "displays help", [&help](std::string_view arg) { help = arg; });
+    sut.on<1>("--help", "displays help", [&help](std::string_view arg) { help = arg; });
     sut.parse({"--help", "me"});
 
     ASSERT_THAT(help, Eq("me"));
@@ -136,20 +135,19 @@ namespace C8::OptionParser {
   TEST_F(ParserTestSuite, accessLambdaParameterNotPresentWithArg) {
     std::string help;
 
-    sut.on<1>(
-      "--help", "displays help", [&help](std::string_view arg) { help = arg; });
+    sut.on<1>("--help", "displays help", [&help](std::string_view arg) { help = arg; });
     sut.parse({});
 
     ASSERT_THAT(help, Eq(""));
   }
 
   TEST_F(ParserTestSuite, throwWhenRegisteringOptionWithInvalidName) {
-    ASSERT_THROW(sut.on<bool>("help", "displays help"), InvalidOptionNameError);
+    ASSERT_THROW(sut.on<bool>("help", "displays help"), Errors::InvalidOptionNameError);
   }
 
   TEST_F(ParserTestSuite, throwWhenUnknownArgumentPassed) {
     sut.on<bool>("--help", "displays help");
-    ASSERT_THROW(sut.parse({"--something"}), UnknownOptionError);
+    ASSERT_THROW(sut.parse({"--something"}), Errors::UnknownOptionError);
   }
 
   TEST_F(ParserTestSuite, acceptAnyStringAfterDelimeter) {
@@ -194,7 +192,7 @@ namespace C8::OptionParser {
       ASSERT_NO_THROW(args.take());
     }
 
-    ASSERT_THROW(args.take(), MissingArgumentError);
+    ASSERT_THROW(args.take(), Errors::MissingArgumentError);
   }
 
   struct ParserHelpTestSuite : public ParserTestSuite {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Error.hpp"
+#include "errors.hpp"
 #include <deque>
 #include <string>
 #include <string_view>
@@ -37,7 +37,7 @@ namespace C8::OptionParser {
 
     value_type take() {
       if (args_.size() == 0)
-        throw MissingArgumentError();
+        throw Errors::MissingArgumentError();
 
       value_type result = args_.front();
       args_.pop_front();
