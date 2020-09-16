@@ -1,8 +1,21 @@
 #!/usr/bin/ruby
 
-gem 'rake-builder', '~> 2.0', '>= 2.0.8'
+gem 'rake-builder', '~> 2.0', '>= 2.0.11'
 
 require 'rake-builder'
+
+$argv = {}
+
+RakeBuilder::OptionParser.new { |op|
+  op.on('--help') {
+    $stdout.puts op
+    exit 0
+  }
+
+  op.on('--debug', 'adds debug flags') { |v|
+    $argv[:debug] = v
+  }
+}.parse!(ARGV)
 
 namespaces = Dir['rakelib/c8-*.rake'].collect { |x| File.basename(x).chomp('.rake') }
 
@@ -11,6 +24,17 @@ task(default: namespaces.collect { |x| "#{x}:default" })
 
 desc 'Run all tests'
 task(test: namespaces.collect { |x| "#{x}:test" })
+
+desc 'Clean all build targets'
+task(:clean) {
+  Dir['.obj', 'lib', 'bin'].each { |fn|
+    if File.directory? fn
+      FileUtils.rm_rf fn, verbose: true
+    else
+      FileUtils.rm fn, verbose: true
+    end
+  }
+}
 
 desc 'Generates template for new library'
 task(:new, [:name]) { |t, args|
@@ -21,7 +45,7 @@ task(:new, [:name]) { |t, args|
     d << "namespace('c8-#{name}') {"
     d << "  flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG']"
     d << ""
-    d << "  if ENV.has_key?('debug')"
+    d << "  if $argv[:debug]"
     d << "    flags -= ['-O3', '-s', '-DNDEBUG']"
     d << "    flags += ['-g']"
     d << "  end"

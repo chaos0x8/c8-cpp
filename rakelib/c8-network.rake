@@ -1,7 +1,7 @@
 namespace('c8-network') {
   flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG']
 
-  if ENV.has_key?('debug')
+  if $argv[:debug]
     flags -= ['-O3', '-s', '-DNDEBUG']
     flags += ['-g']
   end

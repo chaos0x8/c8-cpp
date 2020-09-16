@@ -1,7 +1,7 @@
 namespace('c8-embeded-ruby') {
   flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG', '-Wno-register']
 
-  if ENV.has_key?('debug')
+  if $argv[:debug]
     flags -= ['-O3', '-s', '-DNDEBUG']
     flags += ['-g']
   end
