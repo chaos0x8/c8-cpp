@@ -1,9 +1,10 @@
 namespace('c8-option-parser') {
-  flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG']
+  flags = ['--std=c++17', '-Wall', '-Werror']
 
   if $argv[:debug]
-    flags -= ['-O3', '-s', '-DNDEBUG']
     flags += ['-g']
+  else
+    flags += ['-O3', '-s', '-DNDEBUG']
   end
 
   generated = [

@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-gem 'rake-builder', '~> 2.0', '>= 2.0.11'
+gem 'rake-builder', '~> 3.1', '>= 3.1.0'
 
 require 'rake-builder'
 
@@ -41,73 +41,78 @@ task(:new, [:name]) { |t, args|
   name = args[:name]
 
   unless File.exist?("rakelib/c8-#{name}.rake")
-    d = []
-    d << "namespace('c8-#{name}') {"
-    d << "  flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG']"
-    d << ""
-    d << "  if $argv[:debug]"
-    d << "    flags -= ['-O3', '-s', '-DNDEBUG']"
-    d << "    flags += ['-g']"
-    d << "  end"
-    d << ""
-    d << "  install = InstallPkg.new { |t|"
-    d << "    t.name = 'pkgs'"
-    d << "    t.pkgs << []"
-    d << "  }"
-    d << ""
-    d << "  pkgs = []"
-    d << ""
-    d << "  generated = ["
-    d << "    'src/c8-#{name}/errors.hpp'"
-    d << "  ].collect { |fn|"
-    d << "    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)"
-    d << "      Generate.includeDirectory(dir)"
-    d << "    end"
-    d << "  }.compact"
-    d << ""
-    d << "  library = Library.new { |t|"
-    d << "    t.name = 'lib/libc8-#{name}.a'"
-    d << "    t.requirements << ['c8-#{name}:pkgs', generated]"
-    d << "    t.sources << FileList['src/c8-#{name}/**/*.cpp']"
-    d << "    t.includes << ['src']"
-    d << "    t.pkgs << pkgs"
-    d << "    t.flags << flags"
-    d << "  }"
-    d << ""
-    d << "  ut = Executable.new { |t|"
-    d << "    t.name = 'bin/c8-#{name}-ut'"
-    d << "    t.requirements << ['c8-#{name}:pkgs', generated]"
-    d << "    t.sources << FileList['test/c8-#{name}/**/*.cpp']"
-    d << "    t.includes << ['src', 'test']"
-    d << "    t.libs << ['-pthread', '-lgtest', '-lgmock', library]"
-    d << "    t.pkgs << pkgs"
-    d << "    t.flags << flags"
-    d << "  }"
-    d << ""
-    d << "  desc 'Builds c8-#{name}'"
-    d << "  C8.multitask(default: Names['generated:default', library])"
-    d << ""
-    d << "  desc 'Runs c8-#{name} tests'"
-    d << "  C8.multitask(test: Names['generated:default', library, ut]) {"
-    d << "    sh ut.name"
-    d << "  }"
-    d << "}"
-
-    IO.write("rakelib/c8-#{name}.rake", d.join("\n"))
+    IO.write("rakelib/c8-#{name}.rake", C8.erb(C8.data(__FILE__).rakefile, name: name))
   end
 
   FileUtils.mkdir_p "src/c8-#{name}"
   FileUtils.mkdir_p "test/c8-#{name}"
 
   unless File.exist?("test/c8-#{name}/main.cpp")
-    d = []
-    d << "#include <gtest/gtest.h>"
-    d << ""
-    d << "int main(int argc, char** argv) {"
-    d << "  testing::InitGoogleTest(&argc, argv);"
-    d << "  return RUN_ALL_TESTS();"
-    d << "}"
-
-    IO.write("test/c8-#{name}/main.cpp", d.join("\n"))
+    IO.write("test/c8-#{name}/main.cpp", C8.erb(C8.data(__FILE__).ut_main))
   end
+
+  unless File.exist?("src/c8-#{name}/#{name}.cpp")
+    FileUtils.touch("src/c8-#{name}/#{name}.cpp")
+  end
+}
+
+__END__
+@@rakefile=
+namespace('c8-<%= @name %>') {
+  flags = ['--std=c++17', '-Wall', '-Werror']
+
+  if $argv[:debug]
+    flags += ['-g']
+  else
+    flags += ['-O3', '-s', '-DNDEBUG']
+  end
+
+  install = InstallPkg.new { |t|
+    t.name = 'pkgs'
+    t.pkgs << []
+  }
+
+  pkgs = []
+
+  generated = [
+    'src/c8-<%= @name %>/errors.hpp'
+  ].collect { |fn|
+    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
+      Generate.includeDirectory(dir)
+    end
+  }.compact
+
+  library = Library.new { |t|
+    t.name = 'lib/libc8-<%= @name %>.a'
+    t.requirements << ['c8-<%= @name %>:pkgs', generated]
+    t.sources << FileList['src/c8-<%= @name %>/**/*.cpp']
+    t.includes << ['src']
+    t.pkgs << pkgs
+    t.flags << flags
+  }
+
+  ut = Executable.new { |t|
+    t.name = 'bin/c8-<%= @name %>-ut'
+    t.requirements << ['c8-<%= @name %>:pkgs', generated]
+    t.sources << FileList['test/c8-<%= @name %>/**/*.cpp']
+    t.includes << ['src', 'test']
+    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
+    t.pkgs << pkgs
+    t.flags << flags
+  }
+
+  desc 'Builds c8-<%= @name %>'
+  C8.multitask(default: Names['generated:default', library])
+
+  desc 'Runs c8-<%= @name %> tests'
+  C8.multitask(test: Names['generated:default', library, ut]) {
+    sh ut.name
+  }
+}
+@@ut_main=
+#include <gtest/gtest.h>
+
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

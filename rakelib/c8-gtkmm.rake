@@ -1,9 +1,10 @@
 namespace('c8-gtkmm') {
-  flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG', '-Wno-parentheses']
+  flags = ['--std=c++17', '-Wall', '-Werror', '-Wno-parentheses']
 
   if $argv[:debug]
-    flags -= ['-O3', '-s', '-DNDEBUG']
     flags += ['-g']
+  else
+    flags += ['-O3', '-s', '-DNDEBUG']
   end
 
   install = InstallPkg.new { |t|

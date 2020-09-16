@@ -1,9 +1,10 @@
 namespace('c8-embeded-ruby') {
-  flags = ['--std=c++17', '-Wall', '-Werror', '-O3', '-s', '-DNDEBUG', '-Wno-register']
+  flags = ['--std=c++17', '-Wall', '-Werror', '-Wno-register']
 
   if $argv[:debug]
-    flags -= ['-O3', '-s', '-DNDEBUG']
     flags += ['-g']
+  else
+    flags += ['-O3', '-s', '-DNDEBUG']
   end
 
   install = InstallPkg.new { |t|
