@@ -1,0 +1,9 @@
+#pragma once
+
+#include "c8-common/errors/Error.hpp"
+
+namespace <%= @namespace %> {
+  struct <%= @key %> : public C8::Common::Errors::Error {
+    explicit <%= @key %>();
+  };
+}

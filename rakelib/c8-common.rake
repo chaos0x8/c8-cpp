@@ -5,51 +5,27 @@ def c8_common_errors_new key, c, lib:
   header = GeneratedFile.new(format: true) { |t|
     t.name = File.join("src/#{lib}/errors", "#{key}.hpp")
     t.code = proc {
-      d = []
-      d << "#pragma once"
-      d << ""
-      d << "#include \"c8-common/errors/Error.hpp\""
-      d << ""
-      d << "namespace #{namespace} {"
-      d << "  struct #{key} : public C8::Common::Errors::Error {"
-      d << "    explicit #{key}();"
-      d << "  };"
-      d << "}"
+      C8.erb(
+        IO.read('templates/Error.hpp.erb'),
+        lib: lib, key: key, namespace: namespace)
     }
   }
 
   source = GeneratedFile.new(format: true) { |t|
     t.name = File.join("src/#{lib}/errors", "#{key}.cpp")
     t.code = proc {
-      d = []
-      d << "#include \"#{lib}/errors/#{key}.hpp\""
-      d << "#include \"c8-common/Format.hpp\""
-      d << ""
-      d << "namespace #{namespace} {"
-      d << "  #{key}::#{key}() : C8::Common::Errors::Error(#{c['string']}) {}"
-      d << "}"
+      C8.erb(
+        IO.read('templates/Error.cpp.erb'),
+        lib: lib, key: key, namespace: namespace, c: c)
     }
   }
 
   test = GeneratedFile.new(format: true) { |t|
     t.name = File.join("test/#{lib}/errors", "Test#{key}.cpp")
     t.code = proc {
-      d = []
-      d << "#include \"#{lib}/errors/#{key}.hpp\""
-      d << "#include <gmock/gmock.h>"
-      d << ""
-      d << "namespace #{namespace} {"
-      d << "using namespace testing;"
-      d << "using namespace std::string_literals;"
-      d << ""
-      d << "struct Test#{key} : public Test {"
-      d << "  #{key} sut = #{key}();"
-      d << "};"
-      d << ""
-      d << "TEST_F(Test#{key}, testWhat) {"
-      d << "ASSERT_THAT(sut.what(), Eq(\"#{key}\"s));"
-      d << "}"
-      d << "}"
+      C8.erb(
+        IO.read('templates/TestError.cpp.erb'),
+        lib: lib, key: key, namespace: namespace)
     }
   }
 
@@ -59,7 +35,7 @@ end
 namespace('c8-common') {
   flags = ['--std=c++17', '-Wall', '-Werror']
 
-  if $argv[:debug]
+  if C8::Config.debug
     flags += ['-g']
   else
     flags += ['-O3', '-s', '-DNDEBUG']
@@ -76,7 +52,7 @@ namespace('c8-common') {
 
   library = Library.new { |t|
     t.name = 'lib/libc8-common.a'
-    t.requirements << generated
+    t.requirements << generated << C8::Config
     t.sources << FileList['src/c8-common/**/*.cpp']
     t.includes << ['src']
     t.flags << flags
@@ -84,18 +60,19 @@ namespace('c8-common') {
 
   ut = Executable.new { |t|
     t.name = 'bin/c8-common-ut'
-    t.requirements << generated
+    t.requirements << generated << C8::Config
     t.sources << FileList['test/c8-common/**/*.cpp']
     t.includes << ['src', 'test']
     t.libs << ['-pthread', '-lgtest', '-lgmock', library]
+    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
     t.flags << flags
   }
 
   desc 'Builds c8-common'
-  C8.multitask(default: Names['generated:default', library])
+  C8.multitask(default: Names::All['generated:default', library])
 
   desc 'Runs c8-common tests'
-  C8.multitask(test: Names['generated:default', library, ut]) {
+  C8.multitask(test: Names::All['generated:default', library, ut]) {
     sh ut.name
   }
 

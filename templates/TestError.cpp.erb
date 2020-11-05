@@ -1,0 +1,16 @@
+#include "<%= @lib %>}/errors/<%= @key %>.hpp"
+#include <gmock/gmock.h>
+
+namespace <%= @namespace %> {
+  using namespace testing;
+  using namespace std::string_literals;
+
+  struct Test#{key} : public Test {
+    <%= @key %> sut = {};
+  };
+
+  TEST_F(Test<%= @key %>, testWhat) {
+    ASSERT_THAT(sut.what(), Eq("<%= @key %>"s));
+  }
+}
+

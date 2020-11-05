@@ -5,5 +5,8 @@ namespace(:generated) {
     Generate.includeDirectory(dir)
   }
 
-  C8.multitask(default: Names[directories])
+  default = Invoke.new { |t|
+    t.name = 'default'
+    t.requirements << directories
+  }
 }
