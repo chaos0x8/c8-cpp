@@ -11,18 +11,14 @@
 namespace C8::Common {
   template <class... Args>
   std::string format(std::string_view f, Args&&... args) {
-    std::array<char, 0> dummy;
-
-    auto size = snprintf(
-      dummy.data(), dummy.size(), f.data(), std::forward<Args>(args)...);
+    auto size = snprintf(nullptr, 0, f.data(), std::forward<Args>(args)...);
 
     if (size < 0) {
       throw Errors::FormatError();
     }
 
     std::vector<char> buffer(size + 1, 0);
-    snprintf(
-      buffer.data(), buffer.size(), f.data(), std::forward<Args>(args)...);
-    return std::string(buffer.data(), buffer.size() - 1);
+    size = snprintf(buffer.data(), buffer.size(), f.data(), std::forward<Args>(args)...);
+    return std::string(buffer.data(), size);
   }
 } // namespace C8::Common
