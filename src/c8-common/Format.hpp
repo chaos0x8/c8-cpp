@@ -10,7 +10,7 @@
 
 namespace C8::Common {
   template <class... Args>
-  std::string format(std::string_view f, Args&&... args) {
+  inline std::string format(std::string_view f, Args&&... args) {
     auto size = snprintf(nullptr, 0, f.data(), std::forward<Args>(args)...);
 
     if (size < 0) {

@@ -6,7 +6,7 @@
 
 namespace C8::Common {
   template <class F, class... Args>
-  void measureTime(std::string_view title, std::ostream& out, F&& operation, Args&&... args) {
+  inline void measureTime(std::string_view title, std::ostream& out, F&& operation, Args&&... args) {
     using namespace std::chrono;
 
     auto start = high_resolution_clock::now();
