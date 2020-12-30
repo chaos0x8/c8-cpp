@@ -4,6 +4,6 @@
 
 namespace C8::OptionParser::Errors {
   struct InvalidOptionNameError : public C8::OptionParser::Errors::Error {
-    explicit InvalidOptionNameError(std::string_view);
+    explicit InvalidOptionNameError(const std::string&);
   };
 } // namespace C8::OptionParser::Errors

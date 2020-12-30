@@ -4,6 +4,6 @@
 
 namespace C8::OptionParser::Errors {
   struct UnknownOptionError : public C8::OptionParser::Errors::Error {
-    explicit UnknownOptionError(std::string_view);
+    explicit UnknownOptionError(const std::string&);
   };
 } // namespace C8::OptionParser::Errors

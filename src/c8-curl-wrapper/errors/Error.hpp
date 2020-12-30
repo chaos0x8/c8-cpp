@@ -4,6 +4,6 @@
 
 namespace C8::CurlWrapper::Errors {
   struct Error : public C8::Common::Errors::Error {
-    explicit Error(std::string_view);
+    explicit Error(const std::string&);
   };
 } // namespace C8::CurlWrapper::Errors

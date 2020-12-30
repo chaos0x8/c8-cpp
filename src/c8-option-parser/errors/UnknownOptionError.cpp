@@ -2,6 +2,6 @@
 #include "c8-common/Format.hpp"
 
 namespace C8::OptionParser::Errors {
-  UnknownOptionError::UnknownOptionError(std::string_view msg)
-    : C8::OptionParser::Errors::Error(Common::format("UnknownOptionError: '%s'", msg.data())) {}
+  UnknownOptionError::UnknownOptionError(const std::string& msg)
+    : C8::OptionParser::Errors::Error(Common::format("UnknownOptionError: '%s'", msg)) {}
 } // namespace C8::OptionParser::Errors

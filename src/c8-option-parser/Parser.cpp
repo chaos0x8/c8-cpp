@@ -122,7 +122,7 @@ namespace C8::OptionParser {
 
   void Parser::verifyOptionName(std::string_view name) const {
     if (not isOptionNameValid(name)) {
-      throw Errors::InvalidOptionNameError(name);
+      throw Errors::InvalidOptionNameError(std::string(name));
     }
   }
 } // namespace C8::OptionParser

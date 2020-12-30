@@ -4,6 +4,6 @@
 
 namespace C8::Common::Errors {
   struct OperationAbortedError : public C8::Common::Errors::Error {
-    explicit OperationAbortedError(std::string_view);
+    explicit OperationAbortedError(const std::string&);
   };
 } // namespace C8::Common::Errors
