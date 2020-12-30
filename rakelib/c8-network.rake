@@ -1,13 +1,7 @@
 C8::Config.register :networkBufferSize, default: 1024*1024
 
 namespace('c8-network') {
-  flags = ['--std=c++17', '-Wall', '-Werror']
-
-  if C8::Config.debug
-    flags += ['-g']
-  else
-    flags += ['-O3', '-s', '-DNDEBUG']
-  end
+  flags = $flags
 
   generated = Invoke.new { |t|
     t.name = 'generated'

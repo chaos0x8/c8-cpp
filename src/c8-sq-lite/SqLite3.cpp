@@ -89,16 +89,23 @@ namespace C8::SqLite {
   }
 
   int SqLite3::selectCallBack(void* data, int argc, char** argv, char** colName) {
+    if (argc < 0) {
+      return 0;
+    }
+
     auto result = static_cast<std::pair<SelectResult, bool>*>(data);
 
-    if (!result->second)
-      for (int i = 0; i < argc; ++i)
+    if (!result->second) {
+      for (size_t i = 0; i < static_cast<size_t>(argc); ++i) {
         result->first.addColumn(colName[i], i);
+      }
+    }
 
     SelectResult::Row newRow;
-    newRow.reserve(argc);
-    for (auto ptr = argv; ptr != argv + argc; ++ptr)
+    newRow.reserve(static_cast<size_t>(argc));
+    for (auto ptr = argv; ptr != argv + argc; ++ptr) {
       newRow.emplace_back(*ptr ? *ptr : std::string());
+    }
 
     result->first.push_back(std::move(newRow));
     result->second = true;

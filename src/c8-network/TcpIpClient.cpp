@@ -24,11 +24,11 @@ namespace C8::Network {
     std::array<char, BUFFER_SIZE> buffor;
 
     int r = ::recv(**fd, buffor.data(), buffor.size(), 0);
-    if (r == -1) {
+    if (r < 0) {
       throw Common::Errors::SystemError(errno);
     }
 
-    return std::string(buffor.data(), r);
+    return std::string(buffor.data(), static_cast<size_t>(r));
   }
 
   std::string TcpIpClient::receive(size_t size) {
@@ -37,11 +37,11 @@ namespace C8::Network {
     Common::runtimeAssert(size <= BUFFER_SIZE, "size exceeds buffor size");
 
     int r = ::recv(**fd, buffor.data(), std::min(buffor.size(), size), 0);
-    if (r == -1) {
+    if (r < 0) {
       throw Common::Errors::SystemError(errno);
     }
 
-    return std::string(buffor.data(), r);
+    return std::string(buffor.data(), static_cast<size_t>(r));
   }
 
   bool TcpIpClient::receive(void* dst, size_t size) {
@@ -52,6 +52,5 @@ namespace C8::Network {
     return r > 0 and static_cast<size_t>(r) == size;
   }
 
-  TcpIpClient::TcpIpClient(Detail::FileDescriptor fd)
-    : BaseSocket(std::move(fd)) {}
+  TcpIpClient::TcpIpClient(Detail::FileDescriptor fd) : BaseSocket(std::move(fd)) {}
 } // namespace C8::Network

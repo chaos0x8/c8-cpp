@@ -8,7 +8,7 @@
 namespace C8::SqLite {
   struct FirstLetterHash {
     size_t operator()(const std::string& text) const {
-      return text[0];
+      return static_cast<size_t>(text[0]);
     }
   };
 

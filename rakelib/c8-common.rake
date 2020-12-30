@@ -33,13 +33,7 @@ def c8_common_errors_new key, c, lib:
 end
 
 namespace('c8-common') {
-  flags = ['--std=c++17', '-Wall', '-Werror']
-
-  if C8::Config.debug
-    flags += ['-g']
-  else
-    flags += ['-O3', '-s', '-DNDEBUG']
-  end
+  flags = $flags
 
   generated = [
     'src/c8-common/errors.hpp',

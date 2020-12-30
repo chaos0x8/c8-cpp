@@ -35,9 +35,9 @@ namespace C8::SqLite {
     ASSERT_FALSE(sut.empty());
     ASSERT_THAT(sut, SizeIs(3u));
 
-    ASSERT_THAT(sut, CheckRow(0, "1", "ted", "dal"));
-    ASSERT_THAT(sut, CheckRow(1, "2", "kyra", "shadow"));
-    ASSERT_THAT(sut, CheckRow(2, "3", "izzie", "lone"));
+    ASSERT_THAT(sut, CheckRow(0u, "1", "ted", "dal"));
+    ASSERT_THAT(sut, CheckRow(1u, "2", "kyra", "shadow"));
+    ASSERT_THAT(sut, CheckRow(2u, "3", "izzie", "lone"));
 
     ASSERT_THROW(sut.at(0, "non-existing"), std::out_of_range);
 

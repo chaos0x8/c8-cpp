@@ -11,20 +11,19 @@ namespace C8::Network {
     std::array<char, BUFFER_SIZE> buffor;
     UdpMessage msg{};
 
-    ssize_t nread = ::recvfrom(**fd, buffor.data(), buffor.size(), 0,
-      reinterpret_cast<sockaddr*>(&msg.address), &msg.addressLength);
-    if (nread == -1) {
+    ssize_t nread =
+      ::recvfrom(**fd, buffor.data(), buffor.size(), 0, reinterpret_cast<sockaddr*>(&msg.address), &msg.addressLength);
+    if (nread < 0) {
       throw Common::Errors::SystemError(errno);
     }
 
-    msg.data = std::string(buffor.data(), nread);
+    msg.data = std::string(buffor.data(), static_cast<size_t>(nread));
 
     return msg;
   }
 
   void UdpServer::send(UdpMessage msg) {
-    if (::sendto(**fd, msg.data.data(), msg.data.size(), 0,
-          reinterpret_cast<sockaddr*>(&msg.address),
+    if (::sendto(**fd, msg.data.data(), msg.data.size(), 0, reinterpret_cast<sockaddr*>(&msg.address),
           msg.addressLength) != static_cast<ssize_t>(msg.data.size())) {
       throw Common::Errors::SystemError(errno);
     }

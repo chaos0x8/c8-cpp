@@ -1,11 +1,5 @@
 namespace('c8-named-pipe') {
-  flags = ['--std=c++17', '-Wall', '-Werror']
-
-  if C8::Config.debug
-    flags += ['-g']
-  else
-    flags += ['-O3', '-s', '-DNDEBUG']
-  end
+  flags = $flags
 
   library = Library.new { |t|
     t.name = 'lib/libc8-named-pipe.a'

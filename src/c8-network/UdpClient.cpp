@@ -18,9 +18,9 @@ namespace C8::Network {
     std::array<char, BUFFER_SIZE> buffor;
 
     int nread = ::read(**fd, buffor.data(), buffor.size());
-    if (nread == -1) {
+    if (nread < 0) {
       throw Common::Errors::SystemError(errno);
     }
-    return std::string(buffor.data(), nread);
+    return std::string(buffor.data(), static_cast<size_t>(nread));
   }
 } // namespace C8::Network

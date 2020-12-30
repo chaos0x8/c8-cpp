@@ -1,11 +1,5 @@
 namespace('c8-gtkmm') {
-  flags = ['--std=c++17', '-Wall', '-Werror', '-Wno-parentheses']
-
-  if C8::Config.debug
-    flags += ['-g']
-  else
-    flags += ['-O3', '-s', '-DNDEBUG']
-  end
+  flags = $flags + ['-Wno-parentheses', '-Wno-sign-conversion']
 
   install = InstallPkg.new { |t|
     t.name = 'pkgs'

@@ -1,11 +1,5 @@
 namespace('c8-option-parser') {
-  flags = ['--std=c++17', '-Wall', '-Werror']
-
-  if C8::Config.debug
-    flags += ['-g']
-  else
-    flags += ['-O3', '-s', '-DNDEBUG']
-  end
+  flags = $flags
 
   generated = [
     'src/c8-option-parser/errors.hpp',

@@ -17,6 +17,14 @@ RakeBuilder::OptionParser.new { |op|
   }
 }.parse!(ARGV)
 
+$flags = ['--std=c++17', '-Wall', '-Werror', '-Wsign-conversion']
+
+if C8::Config.debug
+  $flags += ['-g']
+else
+  $flags += ['-O3', '-s', '-DNDEBUG']
+end
+
 namespaces = Dir['rakelib/c8-*.rake'].collect { |x| File.basename(x).chomp('.rake') }
 
 desc 'Builds all libs'
