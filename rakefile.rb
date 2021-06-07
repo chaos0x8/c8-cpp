@@ -6,16 +6,10 @@ require 'rake-builder'
 
 C8::Config.register :debug, default: false
 
-RakeBuilder::OptionParser.new { |op|
-  op.on('--help') {
-    $stdout.puts op
-    exit 0
-  }
-
-  op.on('--[no-]debug', 'sets debug flags') { |v|
-    C8::Config.debug = v
-  }
-}.parse!(ARGV)
+task('debug', [:value]) { |t, args|
+  value = args[:value] == 'true'
+  C8::Config.debug = value
+}
 
 $flags = ['--std=c++17', '-Wall', '-Werror', '-Wsign-conversion']
 

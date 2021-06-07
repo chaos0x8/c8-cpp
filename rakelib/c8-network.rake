@@ -1,5 +1,15 @@
 C8::Config.register :networkBufferSize, default: 1024*1024
 
+TEMPLATE_BUFFER_SIZE = <<INLINE
+#pragma once
+
+#include <cstddef>
+
+namespace C8::Network {
+  constexpr size_t BUFFER_SIZE = <%= @size %>u;
+}
+INLINE
+
 namespace('c8-network') {
   flags = $flags
 
@@ -9,7 +19,7 @@ namespace('c8-network') {
       t.name = 'src/c8-network/generated/BufferSize.hpp'
       t.requirements << 'rakelib/c8-network.rake' << C8::Config
       t.code = proc {
-        C8.erb(C8.data(__FILE__).bufferSize, size: C8::Config.networkBufferSize)
+        C8.erb(TEMPLATE_BUFFER_SIZE, size: C8::Config.networkBufferSize)
       }
     }
   }
@@ -39,14 +49,4 @@ namespace('c8-network') {
   C8.multitask(test: Names::All['generated:default', library, ut]) {
     sh ut.name
   }
-}
-
-__END__
-@@bufferSize=
-#pragma once
-
-#include <cstddef>
-
-namespace C8::Network {
-  constexpr size_t BUFFER_SIZE = <%= @size %>u;
 }
