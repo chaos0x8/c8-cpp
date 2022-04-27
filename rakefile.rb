@@ -1,56 +1,61 @@
 #!/usr/bin/ruby
 
-gem 'rake-builder', '~> 3.2'
+gem 'rake-builder', '~> 4.0'
 
 require 'rake-builder'
 
 C8::Config.register :debug, default: false
 
-task('debug', [:value]) { |t, args|
+task('debug', [:value]) do |_t, args|
   value = args[:value] == 'true'
   C8::Config.debug = value
-}
+end
 
 $flags = ['--std=c++17', '-Wall', '-Werror', '-Wsign-conversion']
 
-if C8::Config.debug
-  $flags += ['-g']
-else
-  $flags += ['-O3', '-s', '-DNDEBUG']
-end
+$flags += if C8::Config.debug
+            ['-g']
+          else
+            ['-O3', '-s', '-DNDEBUG']
+          end
 
 namespaces = Dir['rakelib/c8-*.rake'].collect { |x| File.basename(x).chomp('.rake') }
 
 desc 'Builds all libs'
-task(default: Names::All[namespaces.collect { |x| "#{x}:default" }])
+C8.multitask(default: namespaces.collect { |x| "#{x}:default" })
 
 desc 'Run all tests'
-task(test: Names::All[namespaces.collect { |x| "#{x}:test" }])
+C8.multitask(test: namespaces.collect { |x| "#{x}:#{x}" }) do
+  namespaces.collect { |x| "#{x}:test" }.each do |task|
+    Rake::Task[task].invoke
+  end
+end
 
 desc 'Clean all build targets'
-task(:clean) {
-  Dir['.obj', 'lib', 'bin'].each { |fn|
-    if File.directory? fn
-      FileUtils.rm_rf fn, verbose: true
-    else
-      FileUtils.rm fn, verbose: true
-    end
-  }
-}
+C8.target(:clean) do
+  %w[lib bin].each do |path|
+    rm path
+  end
+
+  (Dir['.obj/*'] - Dir['.obj/*.json']).each do |path|
+    rm path
+  end
+end
 
 desc 'Generates template for new library'
-task(:new, [:name]) { |t, args|
+C8.task(:new, [:name]) do |_t, args|
   name = args[:name]
 
   unless File.exist?("rakelib/c8-#{name}.rake")
-    IO.write("rakelib/c8-#{name}.rake", C8.erb(IO.read('templates/rakefile.rb.erb'), name: name))
+    code = C8.erb name: name do
+      IO.read('templates/rakefile.rb.erb')
+    end
+
+    IO.write("rakelib/c8-#{name}.rake", code)
   end
 
   FileUtils.mkdir_p "src/c8-#{name}"
   FileUtils.mkdir_p "test/c8-#{name}"
 
-  unless File.exist?("src/c8-#{name}/#{name}.cpp")
-    FileUtils.touch("src/c8-#{name}/#{name}.cpp")
-  end
-}
-
+  FileUtils.touch("src/c8-#{name}/#{name}.cpp") unless File.exist?("src/c8-#{name}/#{name}.cpp")
+end

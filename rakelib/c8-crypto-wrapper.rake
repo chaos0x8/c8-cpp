@@ -1,46 +1,32 @@
-namespace('c8-crypto-wrapper') {
-  flags = $flags
-
-  install = InstallPkg.new { |t|
-    t.name = 'pkgs'
-    t.pkgs << ['libcrypto++-dev']
-  }
-
-  pkgs = ['libcrypto++']
-
-  generated = [
-    'src/c8-crypto-wrapper/errors.hpp'
-  ].collect { |fn|
-    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
-      Generate.includeDirectory(dir)
+namespace('c8-crypto-wrapper') do
+  p = C8.project 'c8-crypto-wrapper' do
+    phony 'configure' do
+      apt_install 'libcrypto++-dev'
     end
-  }.compact
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-crypto-wrapper.a'
-    t.requirements << ['c8-crypto-wrapper:pkgs', generated, C8::Config]
-    t.sources << FileList['src/c8-crypto-wrapper/**/*.cpp']
-    t.includes << ['src']
-    t.pkgs << pkgs
-    t.flags << flags
-  }
+    flags << $flags
+    flags << %w[-Isrc]
 
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-crypto-wrapper-ut'
-    t.requirements << ['c8-crypto-wrapper:pkgs', generated, C8::Config, 'c8-common:default']
-    t.sources << FileList['test/c8-crypto-wrapper/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library, 'lib/libc8-common.a']
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.pkgs << pkgs
-    t.flags << flags
-  }
+    link 'lib/libc8-common.a'
+
+    pkg_config 'libcrypto++'
+
+    library 'lib/libc8-crypto-wrapper.a' do
+      sources << Dir['src/c8-crypto-wrapper/**/*.cpp']
+    end
+
+    executable 'bin/c8-crypto-wrapper-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-crypto-wrapper/**/*.cpp']
+    end
+  end
 
   desc 'Builds c8-crypto-wrapper'
-  C8.multitask(default: Names::All['generated:default', library])
+  C8.multitask(default: ['lib/libc8-crypto-wrapper.a', 'generated:default'])
 
   desc 'Runs c8-crypto-wrapper tests'
-  C8.multitask(test: Names::All['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
+  C8.multitask(test: ['c8-crypto-wrapper:default', 'bin/c8-crypto-wrapper-ut']) do
+    sh 'bin/c8-crypto-wrapper-ut'
+  end
+end

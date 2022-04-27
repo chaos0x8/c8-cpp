@@ -1,6 +1,6 @@
-#include "<%= @lib %>/errors/<%= @key %>.hpp"
+#include "<%= lib %>/errors/<%= key %>.hpp"
 #include "c8-common/Format.hpp"
 
-namespace <%= @namespace %> {
-  <%= @key %>::<%= @key %>() : C8::Common::Errors::Error(<%= @c['string'] %>) {}
+namespace <%= namespace %> {
+  <%= key %>::<%= key %>() : C8::Common::Errors::Error(<%= c['string'] %>) {}
 }

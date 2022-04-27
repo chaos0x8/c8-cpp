@@ -1,44 +1,30 @@
-namespace('c8-curl-wrapper') {
-  flags = $flags
+namespace('c8-curl-wrapper') do
+  p = C8.project 'c8-curl-wrapper' do
+    templates.cpp_include_directory 'src/c8-curl-wrapper/errors.hpp' => Dir['src/c8-curl-wrapper/errors/*.hpp']
 
-  install = InstallPkg.new { |t|
-    t.name = 'pkgs'
-    t.pkgs << []
-  }
+    flags << $flags
+    flags << %w[-Isrc]
 
-  generated = [
-    'src/c8-curl-wrapper/errors.hpp'
-  ].collect { |fn|
-    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
-      Generate.includeDirectory(dir)
+    link 'lib/libc8-common.a'
+
+    pkg_config 'libcurl'
+
+    library 'lib/libc8-curl-wrapper.a' do
+      sources << Dir['src/c8-curl-wrapper/**/*.cpp']
     end
-  }
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-curl-wrapper.a'
-    t.requirements << ['c8-curl-wrapper:pkgs', generated, C8::Config]
-    t.sources << FileList['src/c8-curl-wrapper/**/*.cpp']
-    t.includes << ['src']
-    t.pkgs << ['libcurl']
-    t.flags << flags
-  }
-
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-curl-wrapper-ut'
-    t.requirements << ['c8-curl-wrapper:pkgs', generated, C8::Config]
-    t.sources << FileList['test/c8-curl-wrapper/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.pkgs << ['libcurl']
-    t.flags << flags
-  }
+    executable 'bin/c8-curl-wrapper-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-curl-wrapper/**/*.cpp']
+    end
+  end
 
   desc 'Builds c8-curl-wrapper'
-  C8.multitask(default: Names::All['generated:default', library])
+  C8.multitask(default: ['lib/libc8-curl-wrapper.a', 'generated:default'])
 
   desc 'Runs c8-curl-wrapper tests'
-  C8.multitask(test: Names::All['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
+  C8.multitask(test: ['c8-curl-wrapper:default', 'bin/c8-curl-wrapper-ut']) do
+    sh 'bin/c8-curl-wrapper-ut'
+  end
+end

@@ -1,52 +1,42 @@
-C8::Config.register :networkBufferSize, default: 1024*1024
+C8::Config.register :networkBufferSize, default: 1024 * 1024
 
-TEMPLATE_BUFFER_SIZE = <<INLINE
-#pragma once
+namespace 'c8-network' do
+  p = C8.project 'c8-network' do
+    flags << $flags
+    flags << %w[-Isrc]
 
-#include <cstddef>
+    link 'lib/libc8-common.a'
 
-namespace C8::Network {
-  constexpr size_t BUFFER_SIZE = <%= @size %>u;
-}
-INLINE
+    file_generated 'src/c8-network/generated/BufferSize.hpp' => __FILE__ do
+      C8.erb size: C8::Config.networkBufferSize do
+        <<~INLINE
+          #pragma once
 
-namespace('c8-network') {
-  flags = $flags
+          #include <cstddef>
 
-  generated = Invoke.new { |t|
-    t.name = 'generated'
-    t.requirements << GeneratedFile.new(format: true) { |t|
-      t.name = 'src/c8-network/generated/BufferSize.hpp'
-      t.requirements << 'rakelib/c8-network.rake' << C8::Config
-      t.code = proc {
-        C8.erb(TEMPLATE_BUFFER_SIZE, size: C8::Config.networkBufferSize)
-      }
-    }
-  }
+          namespace C8::Network {
+            constexpr size_t BUFFER_SIZE = <%= size %>;
+          }
+        INLINE
+      end
+    end
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-network.a'
-    t.requirements << generated << 'c8-common:default' << C8::Config
-    t.sources << FileList['src/c8-network/**/*.cpp']
-    t.includes << ['src']
-    t.flags << flags
-  }
+    library 'lib/libc8-network.a' do
+      sources << Dir['src/c8-network/**/*.cpp']
+    end
 
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-network-ut'
-    t.requirements << generated << 'c8-common:default' << C8::Config
-    t.sources << FileList['test/c8-network/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library, 'lib/libc8-common.a']
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.flags << flags
-  }
+    executable 'bin/c8-network-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-network/**/*.cpp']
+    end
+  end
 
   desc 'Builds c8-network'
-  C8.multitask(default: Names::All['generated:default', library])
+  C8.multitask(default: ['lib/libc8-network.a', 'generated:default'])
 
-  desc 'Runs c8-network tests'
-  C8.multitask(test: Names::All['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
+  desc 'Runs c8-sq-lite tests'
+  C8.multitask(test: ['c8-network:default', 'bin/c8-network-ut']) do
+    sh 'bin/c8-network-ut'
+  end
+end

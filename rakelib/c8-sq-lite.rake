@@ -1,41 +1,34 @@
-namespace('c8-sq-lite') {
-  flags = $flags
-
-  install = InstallPkg.new { |t|
-    t.name = 'pkgs'
-    t.pkgs << ['libsqlite3-dev']
-  }
-
-  generated = ['src/c8-sq-lite/errors.hpp'].collect { |fn|
-    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
-      Generate.includeDirectory(dir)
+namespace('c8-sq-lite') do
+  p = C8.project 'c8-sq-lite' do
+    phony 'configure' do
+      apt_install 'libsqlite3-dev'
     end
-  }.compact
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-sq-lite.a'
-    t.requirements << ['c8-sq-lite:pkgs', generated, C8::Config]
-    t.sources << FileList['src/c8-sq-lite/**/*.cpp']
-    t.includes << ['src']
-    t.flags << flags
-  }
+    templates.cpp_include_directory 'src/c8-sq-lite/errors.hpp' => Dir['src/c8-sq-lite/errors/*.hpp']
 
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-sq-lite-ut'
-    t.requirements << ['c8-sq-lite:pkgs', generated, C8::Config]
-    t.sources << FileList['test/c8-sq-lite/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.pkgs << ['sqlite3']
-    t.flags << flags
-  }
+    flags << $flags
+    flags << %w[-Isrc]
+
+    link 'lib/libc8-common.a'
+
+    pkg_config 'sqlite3'
+
+    library 'lib/libc8-sq-lite.a' do
+      sources << Dir['src/c8-sq-lite/**/*.cpp']
+    end
+
+    executable 'bin/c8-sq-lite-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-sq-lite/**/*.cpp']
+    end
+  end
 
   desc 'Builds c8-sq-lite'
-  C8.multitask(default: Names::All['generated:default', library])
+  C8.multitask(default: ['lib/libc8-sq-lite.a', 'generated:default'])
 
   desc 'Runs c8-sq-lite tests'
-  C8.multitask(test: Names::All['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
+  C8.multitask(test: ['c8-sq-lite:default', 'bin/c8-sq-lite-ut']) do
+    sh 'bin/c8-sq-lite-ut'
+  end
+end

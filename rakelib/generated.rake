@@ -1,12 +1,18 @@
-namespace(:generated) {
-  directories = Dir['src/*'].select { |dir|
-    File.directory?(dir)
-  }.collect { |dir|
-    Generate.includeDirectory(dir)
-  }
+namespace(:generated) do
+  p = C8.project 'default' do
+    desc 'Generate files'
 
-  default = Invoke.new { |t|
-    t.name = 'default'
-    t.requirements << directories
-  }
-}
+    Pathname.new('src').glob('*')
+            .select(&:directory?)
+            .collect do |dir|
+      templates.cpp_include_directory dir.sub_ext('.hpp') => dir.glob('*.hpp')
+    end
+  end
+
+  desc 'Remove generated files'
+  C8.target :clean do
+    p.dependencies.each do |path|
+      rm path
+    end
+  end
+end

@@ -1,37 +1,28 @@
-namespace('c8-option-parser') {
-  flags = $flags
+namespace('c8-option-parser') do
+  p = C8.project 'c8-option-parser' do
+    templates.cpp_include_directory 'src/c8-option-parser/errors.hpp' => Dir['src/c8-option-parser/errors/*.hpp']
 
-  generated = [
-    'src/c8-option-parser/errors.hpp',
-  ].collect { |fn|
-    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
-      Generate.includeDirectory(dir)
+    flags << $flags
+    flags << %w[-Isrc]
+
+    link 'lib/libc8-common.a'
+
+    library 'lib/libc8-option-parser.a' do
+      sources << Dir['src/c8-option-parser/**/*.cpp']
     end
-  }
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-option-parser.a'
-    t.requirements << generated << C8::Config
-    t.sources << FileList['src/c8-option-parser/**/*.cpp']
-    t.includes << ['src']
-    t.flags << flags
-  }
-
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-option-parser-ut'
-    t.requirements << generated << C8::Config
-    t.sources << FileList['test/c8-option-parser/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.flags << flags
-  }
+    executable 'bin/c8-option-parser-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-option-parser/**/*.cpp']
+    end
+  end
 
   desc 'Builds c8-option-parser'
-  C8.multitask(default: Names::All['generated:default', library])
+  C8.multitask(default: ['lib/libc8-option-parser.a', 'generated:default'])
 
-  desc 'Runs c8-option-parser tests'
-  C8.multitask(test: Names::All['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
+  desc 'Runs c8-sq-lite tests'
+  C8.multitask(test: ['c8-option-parser:default', 'bin/c8-option-parser-ut']) do
+    sh 'bin/c8-option-parser-ut'
+  end
+end

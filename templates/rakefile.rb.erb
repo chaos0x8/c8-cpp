@@ -1,47 +1,28 @@
-namespace('c8-<%= @name %>') {
-  flags = $flags
+namespace 'c8-<%= name %>' do
+  p = C8.project 'c8-<%= name %>' do
+    templates.cpp_include_directory 'src/c8-<%= name %>/errors.hpp' => Dir['src/c8-<%= name %>/errors/*.hpp']
 
-  install = InstallPkg.new { |t|
-    t.name = 'pkgs'
-    t.pkgs << []
-  }
+    flags << $flags
+    flags << %w[-Isrc]
 
-  pkgs = []
+    link 'lib/libc8-common.a'
 
-  generated = [
-    'src/c8-<%= @name %>/errors.hpp'
-  ].collect { |fn|
-    if dir = fn.chomp(File.extname(fn)) and File.directory?(dir)
-      Generate.includeDirectory(dir)
+    library 'lib/lib<%= name %>.a' do
+      sources << Dir['src/c8-<%= name %>/**/*.cpp']
     end
-  }.compact
 
-  library = Library.new { |t|
-    t.name = 'lib/libc8-<%= @name %>.a'
-    t.requirements << ['c8-<%= @name %>:pkgs', generated]
-    t.sources << FileList['src/c8-<%= @name %>/**/*.cpp']
-    t.includes << ['src']
-    t.pkgs << pkgs
-    t.flags << flags
-  }
+    executable 'bin/c8-<%= name %>-ut' do
+      flags << %w[-Itest]
+      link_flags << %w[-pthread -lgtest -lgmock]
+      sources << Dir['test/c8-<%= name %>/**/*.cpp']
+    end
+  end
 
-  ut = Executable.new { |t|
-    t.name = 'bin/c8-<%= @name %>-ut'
-    t.requirements << ['c8-<%= @name %>:pkgs', generated]
-    t.sources << FileList['test/c8-<%= @name %>/**/*.cpp']
-    t.includes << ['src', 'test']
-    t.libs << ['-pthread', '-lgtest', '-lgmock', library]
-    t.libs << '-lgmock_main' unless t.sources.find { |x| File.basename(x.name) == 'main.cpp' }
-    t.pkgs << pkgs
-    t.flags << flags
-  }
+  desc 'Builds c8-<%= name %>'
+  C8.multitask(default: ['lib/lib<%= name %>.a', 'generated:default'])
 
-  desc 'Builds c8-<%= @name %>'
-  C8.multitask(default: Names['generated:default', library])
-
-  desc 'Runs c8-<%= @name %> tests'
-  C8.multitask(test: Names['generated:default', library, ut]) {
-    sh ut.name
-  }
-}
-
+  desc 'Runs c8-<%= name %> tests'
+  C8.multitask(test: ['c8-<%= name %>:c8-<%= name %>', 'generated:default']) do
+    sh 'bin/c8-<%= name %>-ut'
+  end
+end
