@@ -32,35 +32,25 @@ def c8_common_errors_new(key, c, lib:)
   [header, source, test]
 end
 
-namespace('c8-common') do
-  p = C8.project 'c8-common' do
-    templates.cpp_include_directory 'src/c8-common/errors.hpp' => Dir['src/c8-common/errors/*.hpp']
-    templates.cpp_include_directory 'src/c8-common/type_traits.hpp' => Dir['src/c8-common/type_traits/*.hpp']
+C8.project 'c8-common' do
+  templates.cpp_include_directory 'src/c8-common/errors.hpp' => Dir['src/c8-common/errors/*.hpp']
+  templates.cpp_include_directory 'src/c8-common/type_traits.hpp' => Dir['src/c8-common/type_traits/*.hpp']
 
-    flags << $flags
-    flags << %w[-Isrc]
+  flags << $flags
+  flags << %w[-Isrc]
 
-    link 'lib/libc8-common.a'
+  link 'lib/libc8-common.a'
 
-    pkg_config 'sqlite3'
+  pkg_config 'sqlite3'
 
-    library 'lib/libc8-common.a' do
-      sources << Dir['src/c8-common/**/*.cpp']
-    end
-
-    executable 'bin/c8-common-ut' do
-      flags << %w[-Itest]
-      link_flags << %w[-pthread -lgtest -lgmock]
-      sources << Dir['test/c8-common/**/*.cpp']
-    end
+  library 'lib/libc8-common.a' do
+    sources << Dir['src/c8-common/**/*.cpp']
   end
 
-  desc 'Builds c8-common'
-  C8.multitask(default: ['lib/libc8-common.a', 'generated:default'])
-
-  desc 'Runs c8-common tests'
-  C8.multitask(test: ['c8-common:default', 'bin/c8-common-ut']) do
-    sh 'bin/c8-common-ut'
+  test 'bin/c8-common-ut' do
+    flags << %w[-Itest]
+    link_flags << %w[-pthread -lgtest -lgmock]
+    sources << Dir['test/c8-common/**/*.cpp']
   end
 
   desc 'Generates new error in given library (default lib: c8-common)'
