@@ -1,5 +1,8 @@
 C8.project 'c8-option-parser' do
   templates.cpp_include_directory 'src/c8-option-parser/errors.hpp' => Dir['src/c8-option-parser/errors/*.hpp']
+  templates.cpp_include_directory 'src/c8-option-parser.hpp' => Dir['src/c8-option-parser/*.hpp'] + %w[
+    src/c8-option-parser/errors.hpp
+  ]
 
   flags << $flags
   flags << %w[-Isrc]

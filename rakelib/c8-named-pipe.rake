@@ -1,4 +1,6 @@
 C8.project 'c8-named-pipe' do
+  templates.cpp_include_directory 'src/c8-named-pipe.hpp' => Dir['src/c8-named-pipe/*.hpp']
+
   flags << $flags
   flags << %w[-Isrc]
 

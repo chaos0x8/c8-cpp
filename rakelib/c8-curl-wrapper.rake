@@ -1,5 +1,8 @@
 C8.project 'c8-curl-wrapper' do
   templates.cpp_include_directory 'src/c8-curl-wrapper/errors.hpp' => Dir['src/c8-curl-wrapper/errors/*.hpp']
+  templates.cpp_include_directory 'src/c8-curl-wrapper.hpp' => Dir['src/c8-curl-wrapper/*.hpp'] + %w[
+    src/c8-curl-wrapper/errors.hpp
+  ]
 
   flags << $flags
   flags << %w[-Isrc]

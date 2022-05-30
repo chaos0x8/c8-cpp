@@ -1,4 +1,6 @@
 C8.project 'c8-crypto-wrapper' do
+  templates.cpp_include_directory 'src/c8-crypto-wrapper.hpp' => Dir['src/c8-crypto-wrapper/*.hpp']
+
   phony 'configure' do
     apt_install 'libcrypto++-dev'
   end

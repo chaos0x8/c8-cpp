@@ -4,6 +4,9 @@ C8.project 'c8-sq-lite' do
   end
 
   templates.cpp_include_directory 'src/c8-sq-lite/errors.hpp' => Dir['src/c8-sq-lite/errors/*.hpp']
+  templates.cpp_include_directory 'src/c8-sq-lite.hpp' => Dir['src/c8-sq-lite/*.hpp'] + %w[
+    src/c8-sq-lite/errors.hpp
+  ]
 
   flags << $flags
   flags << %w[-Isrc]

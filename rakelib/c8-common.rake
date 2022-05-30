@@ -35,6 +35,10 @@ end
 C8.project 'c8-common' do
   templates.cpp_include_directory 'src/c8-common/errors.hpp' => Dir['src/c8-common/errors/*.hpp']
   templates.cpp_include_directory 'src/c8-common/type_traits.hpp' => Dir['src/c8-common/type_traits/*.hpp']
+  templates.cpp_include_directory 'src/c8-common.hpp' => Dir['src/c8-common/*.hpp'] + %w[
+    src/c8-common/errors.hpp
+    src/c8-common/type_traits.hpp
+  ]
 
   flags << $flags
   flags << %w[-Isrc]

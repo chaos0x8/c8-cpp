@@ -1,4 +1,6 @@
 C8.project 'c8-gtkmm' do
+  templates.cpp_include_directory 'src/c8-gtkmm.hpp' => Dir['src/c8-gtkmm/*.hpp']
+
   flags << $flags
   flags << %w[-Isrc -Wno-parentheses -Wno-sign-conversion]
 

@@ -4,6 +4,9 @@ C8.project 'c8-embeded-ruby' do
   end
 
   templates.cpp_include_directory 'src/c8-embeded-ruby/errors.hpp' => Dir['src/c8-embeded-ruby/errors/*.hpp']
+  templates.cpp_include_directory 'src/c8-embeded-ruby.hpp' => Dir['src/c8-embeded-ruby/*.hpp'] + %w[
+    src/c8-embeded-ruby/errors.hpp
+  ]
 
   flags << $flags
   flags << %w[-Isrc -Wno-register -Wno-sign-conversion]

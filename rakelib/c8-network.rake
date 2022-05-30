@@ -1,6 +1,8 @@
 C8::Config.register :networkBufferSize, default: 1024 * 1024
 
 C8.project 'c8-network' do
+  templates.cpp_include_directory 'src/c8-network.hpp' => Dir['src/c8-network/*.hpp']
+
   flags << $flags
   flags << %w[-Isrc]
 
