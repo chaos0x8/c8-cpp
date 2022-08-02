@@ -1,21 +1,32 @@
-C8.project 'c8-option-parser' do
-  templates.cpp_include_directory 'src/c8-option-parser/errors.hpp' => Dir['src/c8-option-parser/errors/*.hpp']
-  templates.cpp_include_directory 'src/c8-option-parser.hpp' => Dir['src/c8-option-parser/*.hpp'] + %w[
-    src/c8-option-parser/errors.hpp
-  ]
+require_relative '_common'
 
-  flags << $flags
-  flags << %w[-Isrc]
+namespace 'c8-option-parser' do
+  p = project do |p|
+    include_directory p, 'src/c8-option-parser/errors.hpp', Dir['src/c8-option-parser/errors/*.hpp']
 
-  link 'lib/libc8-common.a'
+    p.flags << $flags
+    p.flags << %w[-Isrc]
+    p.link 'lib/libc8-common.a'
 
-  library 'lib/libc8-option-parser.a' do
-    sources << Dir['src/c8-option-parser/**/*.cpp']
+    p.library 'lib/libc8-option-parser.a' do |t|
+      t.sources << Dir['src/c8-option-parser/**/*.cpp']
+    end
+
+    p.executable 'bin/c8-option-parser-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-option-parser/**/*.cpp']
+    end
   end
 
-  test 'bin/c8-option-parser-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-option-parser/**/*.cpp']
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-option-parser.a')]
+
+  multitask 'test' => [*p.requirements('bin/c8-option-parser-ut')] do
+    sh 'bin/c8-option-parser-ut'
+  end
+
+  task 'clean' do
+    p.clean
   end
 end

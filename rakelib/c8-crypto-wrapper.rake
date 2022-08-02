@@ -1,24 +1,33 @@
-C8.project 'c8-crypto-wrapper' do
-  templates.cpp_include_directory 'src/c8-crypto-wrapper.hpp' => Dir['src/c8-crypto-wrapper/*.hpp']
+namespace 'c8-crypto-wrapper' do
+  p = project do |p|
+    p.flags << $flags << %w[-Isrc]
+    p.link 'lib/libc8-common.a'
 
-  phony 'configure' do
-    apt_install 'libcrypto++-dev'
+    p.configure :configure_c8_crypto_wrapper do |t|
+      t.apt_install 'libcrypto++-dev'
+    end
+
+    p.pkg_config 'libcrypto++'
+
+    p.library 'lib/libc8-crypto-wrapper.a' do |t|
+      t.sources << Dir['src/c8-crypto-wrapper/**/*.cpp']
+    end
+
+    p.executable 'bin/c8-crypto-wrapper-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-crypto-wrapper/**/*.cpp']
+    end
   end
 
-  flags << $flags
-  flags << %w[-Isrc]
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-crypto-wrapper.a')]
 
-  link 'lib/libc8-common.a'
-
-  pkg_config 'libcrypto++'
-
-  library 'lib/libc8-crypto-wrapper.a' do
-    sources << Dir['src/c8-crypto-wrapper/**/*.cpp']
+  multitask 'test' => [*p.requirements('bin/c8-crypto-wrapper-ut')] do
+    sh 'bin/c8-crypto-wrapper-ut'
   end
 
-  test 'bin/c8-crypto-wrapper-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-crypto-wrapper/**/*.cpp']
+  task 'clean' do
+    p.clean
   end
 end

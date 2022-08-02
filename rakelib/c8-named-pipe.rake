@@ -1,18 +1,28 @@
-C8.project 'c8-named-pipe' do
-  templates.cpp_include_directory 'src/c8-named-pipe.hpp' => Dir['src/c8-named-pipe/*.hpp']
+namespace 'c8-named-pipe' do
+  p = project do |p|
+    p.flags << $flags
+    p.flags << %w[-Isrc]
+    p.link 'lib/libc8-common.a'
 
-  flags << $flags
-  flags << %w[-Isrc]
+    p.library 'lib/libc8-named-pipe.a' do |t|
+      t.sources << Dir['src/c8-named-pipe/**/*.cpp']
+    end
 
-  link 'lib/libc8-common.a'
-
-  library 'lib/libc8-named-pipe.a' do
-    sources << Dir['src/c8-named-pipe/**/*.cpp']
+    p.executable 'bin/c8-named-pipe-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-named-pipe/**/*.cpp']
+    end
   end
 
-  test 'bin/c8-named-pipe-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-named-pipe/**/*.cpp']
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-named-pipe.a')]
+
+  multitask 'test' => [*p.requirements('bin/c8-named-pipe-ut')] do
+    sh 'bin/c8-named-pipe-ut'
+  end
+
+  task 'clean' do
+    p.clean
   end
 end

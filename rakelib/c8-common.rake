@@ -1,3 +1,5 @@
+require_relative '_common'
+
 def c8_common_errors_new(key, c, lib:)
   libNamespace = lib.gsub(/^c8-/, '').split('-').collect(&:capitalize).join
   namespace = ['C8', libNamespace, 'Errors'].join('::')
@@ -32,40 +34,53 @@ def c8_common_errors_new(key, c, lib:)
   [header, source, test]
 end
 
-C8.project 'c8-common' do
-  templates.cpp_include_directory 'src/c8-common/errors.hpp' => Dir['src/c8-common/errors/*.hpp']
-  templates.cpp_include_directory 'src/c8-common/type_traits.hpp' => Dir['src/c8-common/type_traits/*.hpp']
-  templates.cpp_include_directory 'src/c8-common.hpp' => Dir['src/c8-common/*.hpp'] + %w[
-    src/c8-common/errors.hpp
-    src/c8-common/type_traits.hpp
-  ]
+namespace 'c8-common' do
+  p = project do |p|
+    include_directory p, 'src/c8-common/errors.hpp', Dir['src/c8-common/errors/*.hpp']
+    include_directory p, 'src/c8-common/type_traits.hpp', Dir['src/c8-common/type_traits/*.hpp']
+    include_directory p, 'src/c8-common.hpp', Dir['src/c8-common/*.hpp'] + %w[src/c8-common/errors.hpp
+                                                                              src/c8-common/type_traits.hpp]
 
-  flags << $flags
-  flags << %w[-Isrc]
+    p.flags << $flags
+    p.flags << %w[-Isrc]
 
-  link 'lib/libc8-common.a'
+    p.configure :install_c8_common do |t|
+      t.apt_install 'libsqlite3-dev'
+    end
 
-  pkg_config 'sqlite3'
+    p.pkg_config 'sqlite3'
 
-  library 'lib/libc8-common.a' do
-    sources << Dir['src/c8-common/**/*.cpp']
+    p.library 'lib/libc8-common.a' do |t|
+      t.sources << Dir['src/c8-common/**/*.cpp']
+    end
+
+    p.executable 'bin/c8-common-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-common/**/*.cpp']
+    end
+
+    desc 'Generates new error in given library (default lib: c8-common)'
+    task(:error, %i[name lib]) do |_t, args|
+      name = args[:name]
+      lib = args[:lib] || 'c8-common'
+
+      gen = c8_common_errors_new(name, { 'string' => "\"#{name}\"" }, lib: lib)
+
+      task('error_exec' => Names[gen])
+
+      Rake::Task['error_exec'].invoke
+    end
   end
 
-  test 'bin/c8-common-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-common/**/*.cpp']
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-common.a')]
+
+  multitask 'test' => [*p.requirements('bin/c8-common-ut')] do
+    sh 'bin/c8-common-ut'
   end
 
-  desc 'Generates new error in given library (default lib: c8-common)'
-  C8.task(:error, %i[name lib]) do |_t, args|
-    name = args[:name]
-    lib = args[:lib] || 'c8-common'
-
-    gen = c8_common_errors_new(name, { 'string' => "\"#{name}\"" }, lib: lib)
-
-    task('error_exec' => Names[gen])
-
-    Rake::Task['error_exec'].invoke
+  task 'clean' do
+    p.clean
   end
 end

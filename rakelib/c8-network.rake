@@ -1,34 +1,45 @@
-C8::Config.register :networkBufferSize, default: 1024 * 1024
+namespace 'c8-network' do
+  p = project do |p|
+    p.flags << $flags
+    p.flags << %w[-Isrc]
+    p.link 'lib/libc8-common.a'
 
-C8.project 'c8-network' do
-  templates.cpp_include_directory 'src/c8-network.hpp' => Dir['src/c8-network/*.hpp']
+    p.generated_file 'src/c8-network/generated/BufferSize.hpp' do |t|
+      size = 1024 * 1024
 
-  flags << $flags
-  flags << %w[-Isrc]
+      t.depend __FILE__
+      t.erb = proc do
+        <<~INLINE
+          #pragma once
 
-  link 'lib/libc8-common.a'
+          #include <cstddef>
 
-  file_generated 'src/c8-network/generated/BufferSize.hpp' => __FILE__ do
-    C8.erb size: C8::Config.networkBufferSize do
-      <<~INLINE
-        #pragma once
+          namespace C8::Network {
+            constexpr size_t BUFFER_SIZE = <%= size %>;
+          }
+        INLINE
+      end
+    end
 
-        #include <cstddef>
+    p.library 'lib/libc8-network.a' do |t|
+      t.sources << Dir['src/c8-network/**/*.cpp']
+    end
 
-        namespace C8::Network {
-          constexpr size_t BUFFER_SIZE = <%= size %>;
-        }
-      INLINE
+    p.executable 'bin/c8-network-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-network/**/*.cpp']
     end
   end
 
-  library 'lib/libc8-network.a' do
-    sources << Dir['src/c8-network/**/*.cpp']
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-network.a')]
+
+  multitask 'test' => [*p.requirements('bin/c8-network-ut')] do
+    sh 'bin/c8-network-ut'
   end
 
-  test 'bin/c8-network-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-network/**/*.cpp']
+  task 'clean' do
+    p.clean
   end
 end

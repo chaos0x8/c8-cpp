@@ -1,27 +1,38 @@
-C8.project 'c8-embeded-ruby' do
-  phony 'configure' do
-    apt_install 'ruby-dev'
+require_relative '_common'
+
+namespace 'c8-embeded-ruby' do
+  p = project do |p|
+    include_directory p, 'src/c8-embeded-ruby/errors.hpp', Dir['src/c8-embeded-ruby/errors/*.hpp']
+
+    p.configure :configure_c8_embeded_ruby do |t|
+      t.apt_install 'ruby-dev'
+    end
+
+    p.flags << $flags
+    p.flags << %w[-Isrc -Wno-register -Wno-sign-conversion]
+    p.link 'lib/libc8-common.a'
+
+    p.pkg_config 'ruby'
+
+    p.library 'lib/libc8-embeded-ruby.a' do |t|
+      t.sources << Dir['src/c8-embeded-ruby/**/*.cpp']
+    end
+
+    p.executable 'bin/c8-embeded-ruby-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-embeded-ruby/**/*.cpp']
+    end
   end
 
-  templates.cpp_include_directory 'src/c8-embeded-ruby/errors.hpp' => Dir['src/c8-embeded-ruby/errors/*.hpp']
-  templates.cpp_include_directory 'src/c8-embeded-ruby.hpp' => Dir['src/c8-embeded-ruby/*.hpp'] + %w[
-    src/c8-embeded-ruby/errors.hpp
-  ]
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-embeded-ruby.a')]
 
-  flags << $flags
-  flags << %w[-Isrc -Wno-register -Wno-sign-conversion]
-
-  link 'lib/libc8-common.a'
-
-  pkg_config 'ruby'
-
-  library 'lib/libc8-embeded-ruby.a' do
-    sources << Dir['src/c8-embeded-ruby/**/*.cpp']
+  multitask 'test' => [*p.requirements('bin/c8-embeded-ruby-ut')] do
+    sh 'bin/c8-embeded-ruby-ut'
   end
 
-  test 'bin/c8-embeded-ruby-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-embeded-ruby/**/*.cpp']
+  task 'clean' do
+    p.clean
   end
 end

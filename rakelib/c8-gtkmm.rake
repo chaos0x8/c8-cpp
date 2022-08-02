@@ -1,20 +1,32 @@
-C8.project 'c8-gtkmm' do
-  templates.cpp_include_directory 'src/c8-gtkmm.hpp' => Dir['src/c8-gtkmm/*.hpp']
+require_relative '_common'
 
-  flags << $flags
-  flags << %w[-Isrc -Wno-parentheses -Wno-sign-conversion]
+namespace 'c8-gtkmm' do
+  p = project do |p|
+    p.flags << $flags
+    p.flags << %w[-Isrc -Wno-parentheses -Wno-sign-conversion]
+    p.link 'lib/libc8-common.a'
 
-  link 'lib/libc8-common.a'
+    p.pkg_config 'gtkmm-3.0'
 
-  pkg_config 'gtkmm-3.0'
+    p.library 'lib/libc8-gtkmm.a' do |t|
+      t.sources << Dir['src/c8-gtkmm/**/*.cpp']
+    end
 
-  library 'lib/libc8-gtkmm.a' do
-    sources << Dir['src/c8-gtkmm/**/*.cpp']
+    p.executable 'bin/c8-gtkmm-ut' do |t|
+      t.flags << %w[-Itest]
+      t.link_flags << %w[-pthread -lgtest -lgmock]
+      t.sources << Dir['test/c8-gtkmm/**/*.cpp']
+    end
   end
 
-  test 'bin/c8-gtkmm-ut' do
-    flags << %w[-Itest]
-    link_flags << %w[-pthread -lgtest -lgmock]
-    sources << Dir['test/c8-gtkmm/**/*.cpp']
+  multitask 'all' => [*p.requirements]
+  multitask 'main' => [*p.requirements('lib/libc8-gtkmm.a')]
+
+  multitask 'test' => [*p.requirements('bin/c8-gtkmm-ut')] do
+    sh 'bin/c8-gtkmm-ut'
+  end
+
+  task 'clean' do
+    p.clean
   end
 end
